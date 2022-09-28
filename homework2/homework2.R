@@ -161,16 +161,26 @@ gformula = function(df, eY_model){
     W <- eY_model(X, y)
 
     # your code here
-    A = m[, 2, drop=FALSE]
+    A = X[,1]
     N = dim(X)[1]
 
-    y_hat = X %*% W[2:11]
+    A_0 = rep(0, length(A))
+    A_1 = rep(1, length(A))
+    
+    X_0 = X
+    X_0[,1] = A_0
+    X_1 = X
+    X_1[,1] = A_1
+
+    y_hat_0 = W[1] + X_0 %*% W[2:11]
+    y_hat_1 = W[1] + X_1 %*% W[2:11]
+
     E_1 = 0
     E_2 = 0
 
     for(i in 1:NROW(X)){
-      E_1 = E_1 + (y_hat[i] * A[i])
-      E_2 = E_2 + (y_hat[i] * (1 - A[i]))
+        E_1 = E_1 + y_hat_1[i]
+        E_2 = E_2 + y_hat_0[i]
     }
 
     ace = (1/N) * (E_1 - E_2)
@@ -253,14 +263,22 @@ aipw = function(df, pA_model, eY_model){
     W1 = as.vector(W1)
     # a_hat = X %*% W1
     a_hat = 1 / (1 + exp(-(X %*% W1)))
-    y_hat = X %*% W2[3:11]
-    k = 0
+
+    A_0 = rep(0, length(A))
+    A_1 = rep(1, length(A))
+    
+    X_0 = cbind(A_0, X) 
+    X_1 = cbind(A_1, X)
+
+    y_hat_0 = W2[1] + X_0 %*% W2[2:11]
+    y_hat_1 = W2[1] + X_1 %*% W2[2:11]
+
     E_1 = 0
     E_2 = 0
-
+    
     for(i in 1:NROW(X)){
-        E_1 = E_1 + ((((y[i] - y_hat[i]) * A[i]) / a_hat[i]) + y_hat[i])
-        E_2 = E_2 + ((((y[i] - y_hat[i]) * (1 - A[i])) / (1 - a_hat[i])) + y_hat[i])
+        E_1 = E_1 + ((((y[i] - y_hat_1[i]) * A[i]) / a_hat[i]) + y_hat_1[i])
+        E_2 = E_2 + ((((y[i] - y_hat_0[i]) * (1 - A[i])) / (1 - a_hat[i])) + y_hat_0[i])
     }
 
     ace = (1/N) * (E_1 - E_2)
