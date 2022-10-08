@@ -95,6 +95,31 @@ nie_mixed_fitted = function(df){
     X <- m[,1:11]
     
     # your code here
+    a <- X[, 1, drop = FALSE]
+    C <- X[, 2:10]
+    md <- X[, 11, drop = FALSE]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+    alpha <- linreg_intercept(X, y)
+    beta <- linreg_intercept(cbind(a, C), y)
+    gama <- t(logisreg(cbind(rep(1, length(y)), C), a))
+    
+    y_hat_1 = beta[1] + cbind(rep(1, length(y)), C) %*% beta[2:length(beta)]
+    y_hat_m_1 = alpha[1] + cbind(rep(1, length(y)), X[, 2:11]) %*% alpha[2:length(alpha)]
+    a_hat_0 = gama[1] + C %*% gama[2:length(gama)]
+
+    ACE = 0
+    for(i in 1:NROW(X)){
+        ACE = ACE + (y_hat_1[i] - (((1 - a[i]) * y_hat_m_1[i]) / a_hat_0[i]))
+    }
+
+    ACE = (1/length(y)) * (ACE)
+
+    return(ACE)
 }
 
 nie_mixed = function(df){
@@ -104,6 +129,37 @@ nie_mixed = function(df){
     X <- m[,1:11]
 
     # your code here
+    a <- X[, 1, drop = FALSE]
+    C <- X[, 2:10]
+    md <- X[, 11, drop = FALSE]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+    alpha <- linreg_intercept(X, y)
+    beta <- linreg_intercept(cbind(a, C), y)
+    
+    y_hat_1 = beta[1] + cbind(rep(1, length(y)), C) %*% beta[2:length(beta)]
+    y_hat_m_1 = alpha[1] + cbind(rep(1, length(y)), X[, 2:11]) %*% alpha[2:length(alpha)]
+    
+    a_hat_0 = 0
+    for(i in 1:NROW(X)){
+        if(a[i] == 0){
+            a_hat_0 = a_hat_0 + 1
+        }
+    }
+    a_hat_0 = a_hat_0/NROW(X)
+
+    ACE = 0
+    for(i in 1:NROW(X)){
+        ACE = ACE + (y_hat_1[i] - (((1 - a[i]) * y_hat_m_1[i]) / a_hat_0))
+    }
+
+    ACE = (1/length(y)) * (ACE)
+
+    return(ACE)
 }
 
 nde_mixed_fitted = function(df){
@@ -113,7 +169,31 @@ nde_mixed_fitted = function(df){
     X <- m[,1:11]
     
     # your code here
+    a <- X[, 1, drop = FALSE]
+    C <- X[, 2:10]
+    md <- X[, 11, drop = FALSE]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+    alpha <- linreg_intercept(X, y)
+    beta <- linreg_intercept(cbind(a, C), y)
+    gama <- t(logisreg(cbind(rep(1, length(y)), C), a))
     
+    y_hat_0 = beta[1] + cbind(rep(0, length(y)), C) %*% beta[2:length(beta)]
+    y_hat_m_1 = alpha[1] + cbind(rep(1, length(y)), X[, 2:11]) %*% alpha[2:length(alpha)]
+    a_hat_0 = gama[1] + C %*% gama[2:length(gama)]
+
+    ACE = 0
+    for(i in 1:NROW(X)){
+        ACE = ACE + ((((1 - a[i]) * y_hat_m_1[i]) / a_hat_0[i]) - y_hat_0[i])
+    }
+
+    ACE = (1/length(y)) * (ACE)
+
+    return(ACE)
 }
 
 nde_mixed = function(df){
@@ -123,6 +203,39 @@ nde_mixed = function(df){
     X <- m[,1:11]
     
     # your code here
+    a <- X[, 1, drop = FALSE]
+    C <- X[, 2:10]
+    md <- X[, 11, drop = FALSE]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+    alpha <- linreg_intercept(X, y)
+    beta <- linreg_intercept(cbind(a, C), y)
+    gama <- t(logisreg(cbind(rep(1, length(y)), C), a))
+    
+    y_hat_0 = beta[1] + cbind(rep(0, length(y)), C) %*% beta[2:length(beta)]
+    y_hat_m_1 = alpha[1] + cbind(rep(1, length(y)), X[, 2:11]) %*% alpha[2:length(alpha)]
+    a_hat_0 = gama[1] + C %*% gama[2:length(gama)]
+
+    a_hat_0 = 0
+    for(i in 1:NROW(X)){
+        if(a[i] == 0){
+            a_hat_0 = a_hat_0 + 1
+        }
+    }
+    a_hat_0 = a_hat_0/NROW(X)
+
+    ACE = 0
+    for(i in 1:NROW(X)){
+        ACE = ACE + ((((1 - a[i]) * y_hat_m_1[i]) / a_hat_0) - y_hat_0[i])
+    }
+
+    ACE = (1/length(y)) * (ACE)
+
+    return(ACE)
 }
 
 nie_g = function(df){
@@ -130,8 +243,21 @@ nie_g = function(df){
     m <- as.matrix(df)
     y <- m[,12, drop=FALSE]
     X <- m[,1:11]
-    
+
     # your code here
+    a <- X[, 1, drop = FALSE]
+    C <- X[, 2:10]
+    md <- X[, 11, drop = FALSE]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+
+    w_md <- linreg_intercept(cbind(a, C), md)
+    w_y <- linreg_intercept(X, y)
+    return(w_md[2] * w_y[length(w_y)])
 }
 
 nde_g = function(df){
@@ -141,12 +267,40 @@ nde_g = function(df){
     X <- m[,1:11]
 
     # your code here
+    a <- X[, 1, drop = FALSE]
+    C <- X[, 2:10]
+    md <- X[, 11, drop = FALSE]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+
+    w_y <- linreg_intercept(X, y)
+    return(w_y[2])
 }
 
 ace_iv = function(df){
     
     m <- as.matrix(df)
     # your code here
+    y <- m[, c("lwage")]
+    a <- m[, c("educ")]
+    z <- m[, c("nearc4")]
+    C <- m[, c("exper","black","smsa","south","smsa66","reg661","reg662","reg663",
+    "reg664","reg665","reg666","reg667","reg668","expersq")]
+
+    linreg_intercept = function(X, y){
+        X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+        A <- solve(t(X) %*% X) %*% t(X) %*% y
+        return(A)
+    }
+
+    w_a <- linreg_intercept(cbind(C, z), a)
+    a_hat = w_a[1] + cbind(C, z) %*% w_a[2:length(w_a)]
+    w_y <- linreg_intercept(cbind(C, a_hat), y)
+    return(w_y[length(w_y)])
 }
 
 # Input:
