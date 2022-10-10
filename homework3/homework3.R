@@ -1,3 +1,5 @@
+# Ha Bui
+# hbui13@jhu.edu
 
 library(MASS)
 
@@ -106,15 +108,16 @@ nie_mixed_fitted = function(df){
     }
     alpha <- linreg_intercept(X, y)
     beta <- linreg_intercept(cbind(a, C), y)
-    gama <- t(logisreg(cbind(rep(1, length(y)), C), a))
+    gama <- logisreg(C, a)
     
     y_hat_1 = beta[1] + cbind(rep(1, length(y)), C) %*% beta[2:length(beta)]
     y_hat_m_1 = alpha[1] + cbind(rep(1, length(y)), X[, 2:11]) %*% alpha[2:length(alpha)]
-    a_hat_0 = gama[1] + C %*% gama[2:length(gama)]
+    gama = as.vector(gama)
+    a_hat = 1 / (1 + exp(-(C %*% gama)))
 
     ACE = 0
     for(i in 1:NROW(X)){
-        ACE = ACE + (y_hat_1[i] - (((1 - a[i]) * y_hat_m_1[i]) / a_hat_0[i]))
+        ACE = ACE + (y_hat_1[i] - (((1 - a[i]) * y_hat_m_1[i]) / (1 - a_hat[i])))
     }
 
     ACE = (1/length(y)) * (ACE)
@@ -180,15 +183,16 @@ nde_mixed_fitted = function(df){
     }
     alpha <- linreg_intercept(X, y)
     beta <- linreg_intercept(cbind(a, C), y)
-    gama <- t(logisreg(cbind(rep(1, length(y)), C), a))
+    gama <- logisreg(C, a)
     
     y_hat_0 = beta[1] + cbind(rep(0, length(y)), C) %*% beta[2:length(beta)]
     y_hat_m_1 = alpha[1] + cbind(rep(1, length(y)), X[, 2:11]) %*% alpha[2:length(alpha)]
-    a_hat_0 = gama[1] + C %*% gama[2:length(gama)]
+    gama = as.vector(gama)
+    a_hat = 1 / (1 + exp(-(C %*% gama)))
 
     ACE = 0
     for(i in 1:NROW(X)){
-        ACE = ACE + ((((1 - a[i]) * y_hat_m_1[i]) / a_hat_0[i]) - y_hat_0[i])
+        ACE = ACE + ((((1 - a[i]) * y_hat_m_1[i]) / (1 - a_hat[i])) - y_hat_0[i])
     }
 
     ACE = (1/length(y)) * (ACE)
