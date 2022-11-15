@@ -1,3 +1,5 @@
+# Ha Bui
+# hbui13@jhu.edu
 
 library(MASS)
 
@@ -154,7 +156,38 @@ seq_g = function(df, a_test, a_control, k = 20){
     
     # represent dataset as a matrix data type.
     m <- as.matrix(df)
-    
+
+    o1 <- m[,1, drop=FALSE]
+    c1 <- m[,2, drop=FALSE]
+    a1 <- m[,3, drop=FALSE]
+    o2 <- m[,4, drop=FALSE]
+    c2 <- m[,5, drop=FALSE]
+    a2 <- m[,6, drop=FALSE]
+    y <- m[,7, drop=FALSE]
+    alpha <- logisreg(cbind(o1, a1, c1), o2)
+    alpha = as.vector(alpha)
+    X <- cbind(o1, a1, c1, o2, a2, c2)
+    X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+    beta <- linreg(X, y)
+
+    y_diff = 0
+    for(i in 1:NROW(m)){
+        y_hat_control = 0
+        y_hat_test = 0
+        for(j in 1:k){
+            o2_hat = 1 / (1 + exp(-(cbind(o1[i], a_control[1], c1[i]) %*% alpha)))
+            y_hat_control = y_hat_control + beta[1] + cbind(o1[i], a_control[1], c1[i], o2_hat, a_control[2], c2[i]) %*% beta[2:length(beta)]
+        }
+        for(j in 1:k){
+            o2_hat = 1 / (1 + exp(-(cbind(o1[i], a_test[1], c1[i]) %*% alpha)))
+            y_hat_test = y_hat_test + beta[1] + cbind(o1[i], a_test[1], c1[i], o2_hat, a_test[2], c2[i]) %*% beta[2:length(beta)]
+        }
+        # y_diff = y_diff + ((y_hat_test - y_hat_control)/k)^2
+        y_diff = y_diff + ((y_hat_test - y_hat_control)/k)
+    }
+    # y_diff = y_diff/(NROW(m)-7)
+    y_diff = y_diff/(NROW(m))
+    return(y_diff)
 }
 
 
@@ -169,7 +202,30 @@ seq_ipw = function(df, coef = 3){
     
     # represent dataset as a matrix data type.
     m <- as.matrix(df)
-    
+
+    o1 <- m[,1, drop=FALSE]
+    c1 <- m[,2, drop=FALSE]
+    a1 <- m[,3, drop=FALSE]
+    o2 <- m[,4, drop=FALSE]
+    c2 <- m[,5, drop=FALSE]
+    a2 <- m[,6, drop=FALSE]
+    y <- m[,7, drop=FALSE]
+    gamma <- logisreg(cbind(c1, o1), a1)
+    gamma = as.vector(gamma)
+    delta <- logisreg(cbind(c1, o1, a1, c2, o2), a2)
+    delta = as.vector(delta)
+
+    v <- c()
+    for(i in 1:NROW(m)){
+        a1_hat = 1 / (1 + exp(-(cbind(c1[i], o1[i]) %*% gamma)))
+        a2_hat = 1 / (1 + exp(-(cbind(c1[i], o1[i], a1[i], c2[i], o2[i]) %*% delta)))
+        v <- append(v, 1/(a1_hat * a2_hat))
+    }
+    # X <- cbind(o1, a1, c1, o2, a2, c2)
+    X <- cbind(a1, a2)
+    X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
+    out <- linreg_weighted(X, y, v)
+    return(out[coef])
 }
 
 #########
@@ -183,7 +239,8 @@ seq_ipw = function(df, coef = 3){
 #           A row vector of weights for a linear regression model (with an intercept)
 #           maximizing the likelihood of observing the data.
 linreg_weighted = function(X, y, w){
-    
+    W = matrix(diag(1/w), ncol = dim(X)[1])
+    t(solve(t(X) %*% W %*% X, t(X) %*% W %*% y))
 }
 
 linreg = function(X, y){
