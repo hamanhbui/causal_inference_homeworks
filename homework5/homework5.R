@@ -16,6 +16,22 @@ library(MASS)
 #   corresponding to q and 1-q quantiles (second and third elements),
 #   and the size of the confidence interval (fourth element).
 bootstrap_vector_ci = function(df, k, f, q) {
+    est <- f(df)
+    
+    mu <- rep(0, k)
+    for (i in 1:k) {
+        df_r <- df_resample(df)
+        
+        mu[i] <- f(df_r)
+    }
+    mu <- sort(mu)
+    
+    cbind(
+        est,
+        est + quantile(est - mu, q, names = FALSE),
+        est + quantile(est - mu, 1 - q, names = FALSE),
+        quantile(est - mu, 1 - q, names = FALSE) - quantile(est - mu, q, names = FALSE)
+    )
 }
 
 # Input:
@@ -35,6 +51,43 @@ bootstrap_vector_ci = function(df, k, f, q) {
 #           an (m+l) length vector, representing a concatenation of parameters of
 #           the stage 2 model, followed by parameters of the stage 1 model.
 q_learning = function(df, x2, y2, x1, q_features, a2_features) {
+    m <- as.matrix(df)
+    x2 <- m[, x2 , drop = FALSE]
+    y2 <- m[, y2, drop = FALSE]
+    x1 <- m[, x1, drop = FALSE]
+    q_features <- m[, q_features, drop = FALSE]
+    alpha <- linreg(x2, y2)
+    q2 = rep(0, NROW(m))
+    for(i in 1:NROW(m)){
+        q_features_p = q_features[i,]
+        q_features_n = q_features[i,]
+
+        if(q_features_p[5] == 1){
+            q_features_n[a2_features] = -q_features_n[a2_features]
+        }else{
+            q_features_p[a2_features] = -q_features_p[a2_features]
+        }
+
+        q2_p1 = q_features_p %*% t(alpha)
+        q2_n1 = q_features_n %*% t(alpha)
+        
+        q2[i] = max(q2_p1, q2_n1)
+    }
+    beta <- linreg(x1, q2)
+
+    # out_p = cbind(1, 1, 1, 0.5, 1) %*% t(beta)
+    # out_n = cbind(1, 1, -1, 0.5, -1) %*% t(beta)
+    # print(out_p)
+    # print(out_n)
+    # quit()
+
+    # out_p = cbind(1, 1, -1, 0.5, 1, -1, -1, -1, 1) %*% t(alpha)
+    # out_n = cbind(1, 1, -1, 0.5, -1, -1, -1, 1, -1) %*% t(alpha)
+    # print(out_p)
+    # print(out_n)
+    # quit()
+
+    return(c(alpha, beta))
 }
 
 

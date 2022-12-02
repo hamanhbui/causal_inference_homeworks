@@ -226,6 +226,7 @@ seq_ipw = function(df, coef = 3){
     X <- cbind(matrix(c(1), nrow=dim(X)[1], ncol=1), X)
     out <- linreg_weighted(X, y, v)
     return(out[coef])
+    #Did not correctly handle the probabilities in the weights (need to make sure you pick the A=0 or A=1 probability depending on the data row)
 }
 
 #########
