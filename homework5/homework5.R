@@ -62,7 +62,7 @@ q_learning = function(df, x2, y2, x1, q_features, a2_features) {
         q_features_p = q_features[i,]
         q_features_n = q_features[i,]
 
-        if(q_features_p[5] == 1){
+        if(q_features_p[a2_features[1]] == 1){
             q_features_n[a2_features] = -q_features_n[a2_features]
         }else{
             q_features_p[a2_features] = -q_features_p[a2_features]
